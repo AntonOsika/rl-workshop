@@ -17,7 +17,7 @@ game.play_n(mc, mc2, 1000)  # -> new agent learns to beat first (frozen) agent
 mc = agents.MC(3)
 q = agents.Q(3)
 
-game.play_n(mc, q, 1000)  # -> q learning wins all the time, MC is stuck in local optima
+game.play_n(mc, q, 1000)  # -> q learning wins all the time, MC gets stuck in local optima
 
 # Recreate MC and Q-learning agents, and give MC 5% exploration
 mc = agents.MC(3)
