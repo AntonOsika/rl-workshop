@@ -1,89 +1,44 @@
-from __future__ import print_function
-import random
-from collections import defaultdict
-
-import numpy as np
+import random 
 import pandas as pd
 import matplotlib.pyplot as plt
 
+def play(agent1, agent2, player=0):
 
-class Game:
-    def __init__(self, player1, player2):
-        self.players = [player1, player2]
-        self._reset()
-
-    def _reset(self):
-        self.pieces = 21
-        self.active_player = random.randint(0, 1)
-
-    def play(self, render=True, learn=True):
-        self._reset()
-        while self.pieces > 0:
-            move = self.players[self.active_player].act(self.pieces)
-            move += 1
-
-            if render:
-                print("Player {} takes {} down to {}".format(
-                    self.active_player + 1, move, self.pieces - move))
-
-            self.pieces -= move
-            if self.pieces <= 0:
-                print("Player {} lost".format(self.active_player + 1))
-
-                if learn:
-                    self.players[self.active_player].feedback(-1)
-                
-                self.active_player = (self.active_player + 1) % 2
-
-                if learn:
-                    self.players[self.active_player].feedback(1)
-
-                return self.active_player
-
-            self.active_player = (self.active_player + 1) % 2
-
-
-def play(p1, p2, render=False, learn=True, seed=None):
-    players = [p1, p2]
     pieces = 21
-    active_player = random.randint(0, 1)
-    if seed is not None:
-        active_player = seed
 
-    while pieces > 0:
-        move = players[active_player].act(pieces)
+    agents = [agent1, agent2]
+
+    while True:
+        move = agents[player].act(pieces)
         move += 1
-
-        if render:
-            print("Player {} takes {} down to {}".format(
-                active_player + 1, move, pieces - move))
-
         pieces -= move
+        
         if pieces <= 0:
-            print("Player {} lost".format(active_player + 1))
+            print('player {} lost'.format(player))
+            return (player + 1) % 2
 
-            if learn:
-                players[active_player].feedback(-1)
-            
-            active_player = (active_player + 1) % 2
+        player = (player + 1 ) % 2
 
-            if learn:
-                players[active_player].feedback(1)
-
-            return active_player
-
-        active_player = (active_player + 1) % 2
-
-
-def play_n(p1, p2, n, learn=True):
+def play_n(agent1, agent2, n, plot=True):
     winners = []
     for i in range(n):
-        winners.append(play(p1, p2, seed=i%2, learn=learn))
-    print(np.mean(winners))
-    print(np.mean(winners[:n//2]))
-    print(np.mean(winners[n//2:]))
-    pd.rolling_mean(pd.Series(winners), max(1, n//100), min_periods=1).plot()
-    pd.Series(winners).rolling(len(winners), 1).mean().plot()
-    plt.grid(1)
-    plt.show()
+        winner = play(agent1, agent2, i%2)
+        if winner == 0:
+            agent1.feedback(1)
+            agent2.feedback(-1)
+        else:
+            agent1.feedback(-1)
+            agent2.feedback(1)
+        agent1.new_episode()
+        agent2.new_episode()
+
+        winners.append(winner)
+        
+    if plot:
+        pd.Series(winners).rolling(10, 10).mean().plot()
+        plt.ylim([0, 1])
+        plt.grid(1)
+        plt.show()
+
+    return winners
 
